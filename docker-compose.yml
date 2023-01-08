@@ -1,0 +1,47 @@
+version: '3'
+services:
+  app:
+    container_name: PHP
+    build: ./docker/php
+    volumes:
+      - .:/var/www
+  nginx:
+    image: nginx
+    container_name: web
+    ports:
+      - 8033:80
+    volumes:
+      - .:/var/www
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf
+    working_dir: /var/www
+    depends_on:
+      - app
+  db:
+    platform: linux/x86_64
+    image: mysql:5.7
+    container_name: db
+    environment:
+      MYSQL_ROOT_PASSWORD: docker
+      MYSQL_DATABASE: auth
+      MYSQL_USER: docker
+      MYSQL_PASSWORD: docker
+      TZ: 'Asia/Tokyo'
+    command: mysqld --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    volumes:
+      - ./docker/db/etc/my.cnf:/etc/my.cnf
+      - ./docker/db/data:/var/lib/mysql
+      - ./docker/db/etc:/docker-entrypoint-initdb.d
+    ports:
+      - 3206:3306
+
+
+  phpmyadmin:
+    image: phpmyadmin
+    container_name: PHPmyadmin
+    environment:
+      - PMA_ARBITRARY=1
+    restart: always
+    ports:
+      - 9092:80
+    volumes:
+      - /sessions
